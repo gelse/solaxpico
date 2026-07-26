@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Pico / MicroPython
+*.uf2
+*.hex
+*.elf
+*.bin
+firmware/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/settings.json
+.vscode/launch.json
+
+# Keep these tracked:
+# !.vscode/tasks.json
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
