@@ -44,8 +44,8 @@
     },
     "postCreateCommand": "pip install --no-cache-dir -e . 2>/dev/null || true",
     "mounts": [
-        "source=${env:HOME}/.ssh,target=/home/vscode/.ssh,type=bind",
-        "source=${env:HOME}/.roo,target=/home/vscode/.roo,type=bind",
-        "source=${env:HOME}/.config/Code/User/globalStorage/zoocodeorganization.zoo-code,target=/home/vscode/.vscode-server/data/User/globalStorage/zoocodeorganization.zoo-code,type=bind"
+        "source=${env:HOME}/.ssh,target=/home/developer/.ssh,type=bind",
+        "source=${env:HOME}/.roo,target=/home/developer/.roo,type=bind",
+        "source=${env:HOME}/.config/Code/User/globalStorage/zoocodeorganization.zoo-code,target=/home/developer/.vscode-server/data/User/globalStorage/zoocodeorganization.zoo-code,type=bind"
     ]
 }

@@ -24,11 +24,15 @@ RUN pip install --no-cache-dir \
     pytest \
     flake8
 
+ARG USERNAME=developer
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
 # Create non-root developer user with serial device access
-RUN groupadd -g 1000 developer \
-    && useradd -m -u 1000 -g developer -G dialout,plugdev developer \
+RUN groupadd -g $USER_GID $USERNAME \
+    && useradd -m -u $USER_UID -g $USERNAME -G dialout,plugdev $USERNAME \
     && mkdir -p /workspace \
-    && chown developer:developer /workspace
+    && chown $USERNAME:$USERNAME /workspace
 
 # Pre-create .roo and zooCode globalStorage directories with correct ownership
 # These are targets for bind mounts from the host; pre-creating ensures correct permissions
@@ -37,7 +41,7 @@ RUN mkdir -p /home/$USERNAME/.roo/skills \
     && chown -R $USERNAME:$USERNAME /home/$USERNAME/.roo \
     && chown -R $USERNAME:$USERNAME /home/$USERNAME/.vscode-server
 
-USER developer
+USER $USERNAME
 WORKDIR /workspace
 
 # Default command
