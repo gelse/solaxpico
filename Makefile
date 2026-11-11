@@ -1,0 +1,95 @@
+# Makefile for solaxpico (Pico W Modbus gateway)
+#
+# Default target prints usage information.
+
+SHELL := /bin/bash
+
+BOARD         ?= RPI_PICO_W
+FIRMWARE_URL  ?= https://micropython.org/download/$(BOARD)/$(BOARD)-latest.uf2
+FIRMWARE_DIR  ?= firmware
+FIRMWARE_FILE ?= $(FIRMWARE_DIR)/$(BOARD)-latest.uf2
+
+# Serial device for a Pico running MicroPython (used by deploy).
+PICO_SERIAL   ?= /dev/ttyACM0
+
+# Optional: override if auto-detection does not find the BOOTSEL drive.
+# Example: make firmware RPI_MOUNT=/run/media/$$USER/RPI-RP2
+RPI_MOUNT     ?=
+
+.PHONY: help firmware deploy clean-firmware
+
+help: ## Show this help message (default)
+	@echo "Usage: make <target>"
+	@echo ""
+	@echo "Targets:"
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ { \
+		printf "  %-18s %s\n", $$1, $$2 \
+	}' $(MAKEFILE_LIST)
+
+firmware: $(FIRMWARE_FILE) ## Download (if needed) and flash MicroPython firmware to the Pico W (BOOTSEL mode)
+	@set -euo pipefail; \
+	mountpoint="$(RPI_MOUNT)"; \
+	user="$${USER:-$$(id -un 2>/dev/null || echo unknown)}"; \
+	if [ -z "$$mountpoint" ]; then \
+		for p in \
+			"/run/media/$$user/RPI-RP2" \
+			"/media/$$user/RPI-RP2" \
+			"/media/RPI-RP2" \
+			"/mnt/RPI-RP2" \
+			"/Volumes/RPI-RP2"; \
+		do \
+			if [ -d "$$p" ]; then mountpoint="$$p"; break; fi; \
+		done; \
+	fi; \
+	if [ -z "$$mountpoint" ]; then \
+		echo "Error: RPI-RP2 mass-storage device not found." >&2; \
+		echo "Put the Pico W into BOOTSEL mode (hold BOOTSEL while connecting USB)," >&2; \
+		echo "ensure it is mounted, or pass RPI_MOUNT=/path/to/RPI-RP2." >&2; \
+		exit 1; \
+	fi; \
+	echo "Flashing MicroPython firmware to $$mountpoint ..."; \
+	cp "$(FIRMWARE_FILE)" "$$mountpoint/"; \
+	sync; \
+	echo "Done. The Pico will reboot automatically after the copy completes."
+
+deploy: ## Deploy solution code, configuration, and service stub to the Pico (MicroPython over serial)
+	@set -euo pipefail; \
+	if ! command -v mpremote >/dev/null 2>&1; then \
+		echo "Error: mpremote not found. Install it (e.g. pip install mpremote) or run inside the devcontainer." >&2; \
+		exit 1; \
+	fi; \
+	if [ ! -e "$(PICO_SERIAL)" ]; then \
+		echo "Error: serial device $(PICO_SERIAL) not found." >&2; \
+		echo "Ensure the Pico is connected with MicroPython running, or set PICO_SERIAL=/dev/ttyACM0." >&2; \
+		exit 1; \
+	fi; \
+	if [ ! -f wifi_config.py ]; then \
+		echo "Error: wifi_config.py not found." >&2; \
+		echo "Copy wifi_config.example.py to wifi_config.py and set your credentials." >&2; \
+		exit 1; \
+	fi; \
+	echo "Deploying to $(PICO_SERIAL) ..."; \
+	mpremote connect "$(PICO_SERIAL)" fs cp src/boot.py :boot.py; \
+	mpremote connect "$(PICO_SERIAL)" fs cp src/main.py :main.py; \
+	mpremote connect "$(PICO_SERIAL)" fs cp src/modbus_bridge.py :modbus_bridge.py; \
+	mpremote connect "$(PICO_SERIAL)" fs cp wifi_config.py :wifi_config.py; \
+	echo "Resetting Pico to start the deployed service ..."; \
+	mpremote connect "$(PICO_SERIAL)" reset; \
+	echo "Done. Service stub deployed (connects to Wi-Fi and idles)."
+
+$(FIRMWARE_FILE):
+	@mkdir -p "$(FIRMWARE_DIR)"
+	@echo "Downloading MicroPython firmware from $(FIRMWARE_URL) ..."
+	@if command -v curl >/dev/null 2>&1; then \
+		curl -fL --retry 3 -o "$(FIRMWARE_FILE)" "$(FIRMWARE_URL)"; \
+	elif command -v wget >/dev/null 2>&1; then \
+		wget -O "$(FIRMWARE_FILE)" "$(FIRMWARE_URL)"; \
+	else \
+		python3 -c "import urllib.request; urllib.request.urlretrieve('$(FIRMWARE_URL)', '$(FIRMWARE_FILE)')"; \
+	fi
+	@echo "Firmware saved to $(FIRMWARE_FILE)"
+
+clean-firmware: ## Remove downloaded MicroPython firmware files
+	rm -rf "$(FIRMWARE_DIR)"
+
+.DEFAULT_GOAL := help

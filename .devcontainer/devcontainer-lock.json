@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/devcontainer-community/devcontainer-features/apt-build-essential:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/devcontainer-community/devcontainer-features/apt-build-essential@sha256:e396b09fdd04aef5ca8d35b9957547142761575575513d12fd8dc3c98c1728f8",
+      "integrity": "sha256:e396b09fdd04aef5ca8d35b9957547142761575575513d12fd8dc3c98c1728f8"
+    }
+  }
+}

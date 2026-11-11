@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     minicom \
     git \
     ca-certificates \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
@@ -29,8 +30,16 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 # Create non-root developer user with serial device access
+# ttyACM/USB serial devices may be owned by dialout, plugdev, tty, or uucp depending on host distro.
+# Host serial device GIDs vary; sudo is provided so startup can grant access to the active device GID.
 RUN groupadd -g $USER_GID $USERNAME \
-    && useradd -m -u $USER_UID -g $USERNAME -G dialout,plugdev $USERNAME \
+    && useradd -m -u $USER_UID -g $USERNAME $USERNAME \
+    && usermod -aG dialout $USERNAME \
+    && (getent group plugdev >/dev/null && usermod -aG plugdev $USERNAME || true) \
+    && (getent group tty >/dev/null && usermod -aG tty $USERNAME || true) \
+    && (getent group uucp >/dev/null && usermod -aG uucp $USERNAME || true) \
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
     && mkdir -p /workspace \
     && chown $USERNAME:$USERNAME /workspace
 

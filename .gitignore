@@ -39,3 +39,6 @@ Thumbs.db
 # Environment
 .env
 .env.*
+
+# Local Wi-Fi credentials (copy from wifi_config.example.py)
+wifi_config.py

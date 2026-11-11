@@ -4,10 +4,17 @@
         "dockerfile": "Dockerfile"
     },
     "runArgs": [
-        "--privileged"
+        "--privileged",
+        "--volume=/dev:/dev",
+        "--device-cgroup-rule=c 166:* rmw",
+        "--device-cgroup-rule=c 188:* rmw",
+        "--device-cgroup-rule=c 189:* rmw"
     ],
     "remoteUser": "developer",
     "containerEnv": {
+        "PICO_SERIAL": "/dev/ttyACM0"
+    },
+    "remoteEnv": {
         "PICO_SERIAL": "/dev/ttyACM0"
     },
     "customizations": {
@@ -43,9 +50,13 @@
         }
     },
     "postCreateCommand": "pip install --no-cache-dir -e . 2>/dev/null || true",
+    "postStartCommand": "bash .devcontainer/fix-serial-access.sh",
     "mounts": [
         "source=${env:HOME}/.ssh,target=/home/developer/.ssh,type=bind",
         "source=${env:HOME}/.roo,target=/home/developer/.roo,type=bind",
         "source=${env:HOME}/.config/Code/User/globalStorage/zoocodeorganization.zoo-code,target=/home/developer/.vscode-server/data/User/globalStorage/zoocodeorganization.zoo-code,type=bind"
-    ]
+    ],
+    "features": {
+        "ghcr.io/devcontainer-community/devcontainer-features/apt-build-essential:1": {}
+    }
 }
