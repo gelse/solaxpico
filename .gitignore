@@ -42,3 +42,7 @@ Thumbs.db
 
 # Local Wi-Fi credentials (copy from wifi_config.example.py)
 wifi_config.py
+
+# Local planning documents (kept out of git history)
+plans/
+
