@@ -6,6 +6,10 @@ translates each request to Modbus RTU, forwards it over RS485 to the inverter,
 and translates the reply back. It replaces a Raspberry Pi Zero W running
 mbusd — no Linux, no SD card, no Docker on the device, just MicroPython.
 
+**The whole build costs around 10–12 €** — Pico W ~7 €, step-down converter
+~2 €, TTL-to-RS485 module ~1.2 €, plus a recycled RJ45 cable end and some
+printer filament. Details in the [hardware description](doc/hardware.md#parts-cost).
+
 Behavior matches the old mbusd setup: an unreachable inverter produces no TCP
 reply (the client's request timeout applies), and the bridge keeps serving.
 

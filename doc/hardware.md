@@ -6,8 +6,18 @@
 |---|------|-------|
 | 1 | Raspberry Pi Pico W | Modbus TCP ↔ RTU bridge, WiFi uplink |
 | 2 | Mini 560 DC-DC step-down, 5 V out | 18.3 × 30 × 5.5 mm; this unit is rated **DC 7–20 V input** (see [Mini-560 terminals](#mini-560-power-chain)), which covers the **measured** COM supply of 14.8 V (manual says +13 V nominal — it varies) |
-| 3 | RS485-to-TTL adapter (auto-direction) | 16.6 × 42.8 × 3 mm; TX/RX LEDs, resettable fuses on A/B, TVS diode |
+| 3 | RS485-to-TTL adapter (auto-direction) | 16.6 × 42.8 × 3 mm; TX/RX LEDs, resettable fuses on A/B, TVS diode; [Amazon](https://www.amazon.de/dp/B0F7LFVM6Q) |
 | 4 | Custom crimped RJ45 cable, 2 pairs | see [Cable pinout](#cable-pinout) |
+
+### Parts cost
+
+| Part | Cost |
+|---|---|
+| Raspberry Pi Pico W | ~7 € |
+| Mini 560 DC-DC step-down ([Amazon](https://www.amazon.de/dp/B0B92ZDK6T)) | ~2 € |
+| TTL to RS485 module ([Amazon](https://www.amazon.de/dp/B0F7LFVM6Q)) | ~1.2 € |
+| Old RJ45 cable end + a bit of printer filament | negligible |
+| **Total** | **~10–12 €** |
 
 ## Device: Solax X3-Hybrid-G4 series
 
