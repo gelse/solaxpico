@@ -5,7 +5,7 @@
 | # | Part | Notes |
 |---|------|-------|
 | 1 | Raspberry Pi Pico W | Modbus TCP ↔ RTU bridge, WiFi uplink |
-| 2 | Mini 560 DC-DC step-down, 5 V out | 18.3 × 30 × 5.5 mm; verify your variant's input range covers the **measured** COM supply (14.8 V on this unit, manual says +13 V nominal — it varies) |
+| 2 | Mini 560 DC-DC step-down, 5 V out | 18.3 × 30 × 5.5 mm; this unit is rated **DC 7–20 V input** (see [Mini-560 terminals](#mini-560-power-chain)), which covers the **measured** COM supply of 14.8 V (manual says +13 V nominal — it varies) |
 | 3 | RS485-to-TTL adapter (auto-direction) | 16.6 × 42.8 × 3 mm; TX/RX LEDs, resettable fuses on A/B, TVS diode |
 | 4 | Custom crimped RJ45 cable, 2 pairs | see [Cable pinout](#cable-pinout) |
 
@@ -83,7 +83,7 @@ signal.
 Inside the device box the chains continue (see [Device box internals](#device-box-internals)):
 Mini-560 OUT+/OUT− → Pico VSYS/GND, and Pico ↔ adapter over the TTL side.
 
-### Power chain
+### Mini-560 power chain
 
 ```
 Solax COM pin 3 (+13V) ──► Mini-560 IN+
@@ -95,6 +95,18 @@ Mini-560 OUT− (GND)    ──► Pico W GND
 Pico W 3V3(OUT) (3.3V) ──► RS485 adapter VCC
 Pico W GND             ──► RS485 adapter GND (TTL side)
 ```
+
+![Mini 560 terminals](Mini_560.png "Mini 560: terminals, enable pin, status LED")
+
+Terminal names on the module (as marked in the picture): **Eingang +/−** = input
+(DC 7–20 V, left/right marked "+"/"−"), **Ausgang +/−** = output (DC 5 V). Note two
+special pads:
+
+- **Enable pin (EN):** active high, *deactivated when open* — per the annotation the
+  module is disabled by default. If OUT+ shows 0 V during bring-up, bridge EN to input
+  "+" and re-measure.
+- **Status LED:** indicates operation; not active by default, so a dark LED alone does
+  not mean the board is dead.
 
 VCC is deliberately 3.3 V, not 5 V: Pico GPIOs are not 5 V-tolerant, and the adapter's
 RXD output drives Pico GP1 directly. At 3.3 V the logic levels stay in spec (the module
@@ -119,6 +131,21 @@ This matches the deployed firmware setting:
 GP0/GP1 are **UART0** pins on the RP2040/RP2350 (UART1 lives on GP4/GP5 etc.,
 so `UART(1, tx=Pin(0), ...)` fails with "bad TX pin"); 19200 8N1, Modbus RTU.
 This does not clash with the REPL, which runs over USB CDC, not over UART0.
+
+![Raspberry Pi Pico W pinout](raspi_pico.png "Pico W pinout with alternate functions (RP2040)")
+
+Pins used by this project (numbering from the picture):
+
+| Pico pin | Board pin | Function in this project |
+|---|---|---|
+| GP0 | 1 | UART0 TX → adapter TXD |
+| GP1 | 2 | UART0 RX ← adapter RXD |
+| 3V3(OUT) | 36 | 3.3 V supply for the adapter |
+| GND | 38 (or any GND) | common ground |
+| VSYS | 39 | 5 V input from Mini-560 OUT+ |
+
+The pinout picture also shows why GP0/GP1 are the natural choice: their primary
+alternate function is already **UART0 TX/RX**, no GPIO-function configuration needed.
 
 ### Device box internals
 
@@ -209,8 +236,9 @@ green carries the power. Pins 1, 2, 7, 8 are simply not wired.
 - **Mini-560:** before first connection to the Pico, power it from the inverter,
   measure the input rail first (expect around 14.8 V on this unit — the "+13 V" label
   is nominal only and varies), then verify 5.0 V (± 5 %) on OUT+ with a multimeter.
-  Optionally add a small inline fuse (0.5 A) in the supply lead — the manual does not
-  specify a current limit for COM pin 3.
+  If OUT+ reads 0 V, pull the **EN pad** high (bridge it to input "+") — the module
+  is disabled with EN open. Optionally add a small inline fuse (0.5 A) in the supply
+  lead — the manual does not specify a current limit for COM pin 3.
 - **Live pin:** COM pin 3 is live whenever the inverter is powered, even if the Pico is
   unplugged. Insulate the green/white lead whenever it is disconnected.
 - **Not an Ethernet port:** the COM jack only accepts the pinout above — never plug it
