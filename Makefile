@@ -59,7 +59,7 @@ firmware: $(FIRMWARE_FILE) ## Download (if needed) and flash MicroPython firmwar
 	sync; \
 	echo "Done. The Pico will reboot automatically after the copy completes."
 
-deploy: ## Deploy solution code, configuration, and service stub to the Pico (MicroPython over serial)
+deploy: ## Deploy bridge code and configuration to the Pico (MicroPython over serial)
 	@set -euo pipefail; \
 	if ! command -v mpremote >/dev/null 2>&1; then \
 		echo "Error: mpremote not found. Install it (e.g. pip install mpremote) or run inside the devcontainer." >&2; \
