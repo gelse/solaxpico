@@ -60,6 +60,13 @@ A+/B− only if you see framing errors or echoes.
 > manual's nominal 13 V. Verify 5.0 V (± 5 %) on the Mini-560 output before
 > connecting VSYS.
 
+**Enclosure:** the Pico, Mini-560 and RS485 adapter fit in a 3D-printed case —
+see the [Enclosure section in doc/hardware.md](doc/hardware.md#enclosure) for
+previews. The editable FreeCAD project is
+[`case/solaxpico.FCStd`](case/solaxpico.FCStd). The case has a hole in one
+side for the CAT cable; a future version will use a proper RJ45 connector with
+fixed lids.
+
 ## Software architecture
 
 ```
@@ -193,6 +200,7 @@ Code-level rollback (same hardware): `git checkout <previous-commit>` and
 ├── tests/                    CPython pytest suite (55 tests)
 ├── scripts/                  thin Make wrappers + pymodbus integration test
 ├── doc/hardware.md           full wiring reference, schematics, bring-up notes
+├── case/solaxpico.FCStd      FreeCAD project for the 3D-printed case
 ├── .devcontainer/            Docker dev environment (incl. serial-access fix)
 ├── wifi_config.example.py    Wi-Fi credential template
 └── wifi_config.py            your credentials (gitignored, create yourself)

@@ -220,6 +220,24 @@ RJ45 pin  T568B color     COM signal          goes to
 The two used pairs are the factory twisted pairs: blue carries the RS485 data,
 green carries the power. Pins 1, 2, 7, 8 are simply not wired.
 
+## Enclosure
+
+The Pico, the Mini-560 and the RS485 adapter live in a 3D-printed case. The
+editable **FreeCAD project is [`case/solaxpico.FCStd`](../case/solaxpico.FCStd)** —
+open it in FreeCAD to modify dimensions or export the parts for printing.
+
+![Case, outside](case_outside.png "Case outside: ventilated lid, base with cable hole")
+
+The case has a **hole in one side for the CAT cable** to pass through — the
+custom RJ45 cable enters the case through it. This is the quick-and-practical
+version: a later revision will replace it with a **separate case version using
+a proper RJ45 connector with fixed lids** (bulkhead-style, professional setup).
+
+![Case, inside](case_inside.png "Case inside: exploded view of the internal frames")
+
+The inside view shows the internal frames that hold the boards and the side
+wall with the cable opening.
+
 ## Bring-up notes and caveats
 
 - **Bus termination:** the run is under 10 m at 19200 baud — start **without** a

@@ -46,3 +46,7 @@ wifi_config.py
 # Local planning documents (kept out of git history)
 plans/
 
+# FreeCAD backups and temp files (the .FCStd project itself is tracked)
+*.FCBak
+*.FCStd1
+
