@@ -43,7 +43,7 @@ def modbus_crc(data: bytes) -> int:
 
     Example:
       >>> hex(modbus_crc(b'\\x01\\x03\\x00\\x00\\x00\\x08'))
-      '0xc945'
+      '0xc44'
     """
     crc = 0xFFFF
     for byte in data:
