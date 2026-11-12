@@ -12,11 +12,18 @@ FIRMWARE_FILE ?= $(FIRMWARE_DIR)/$(BOARD)-latest.uf2
 # Serial device for a Pico running MicroPython (used by deploy).
 PICO_SERIAL   ?= /dev/ttyACM0
 
+# Python interpreter for the CPython test runs.
+PY            ?= python3
+
+# Docker image used by test_dockerized; built from .devcontainer/Dockerfile
+# so host and CI runners share the same image definition.
+DEVCONTAINER_IMAGE ?= solaxpico-devcontainer:latest
+
 # Optional: override if auto-detection does not find the BOOTSEL drive.
 # Example: make firmware RPI_MOUNT=/run/media/$$USER/RPI-RP2
 RPI_MOUNT     ?=
 
-.PHONY: help firmware deploy clean-firmware
+.PHONY: help firmware deploy clean-firmware test test_dockerized
 
 help: ## Show this help message (default)
 	@echo "Usage: make <target>"
@@ -91,5 +98,30 @@ $(FIRMWARE_FILE):
 
 clean-firmware: ## Remove downloaded MicroPython firmware files
 	rm -rf "$(FIRMWARE_DIR)"
+
+test: ## Run the unit tests with CPython (pytest)
+	@set -euo pipefail; \
+	if ! command -v "$(PY)" >/dev/null 2>&1; then \
+		echo "Error: $(PY) not found. Use 'make test_dockerized' on systems without CPython." >&2; \
+		exit 1; \
+	fi; \
+	if ! "$(PY)" -m pytest --version >/dev/null 2>&1; then \
+		echo "Error: pytest is not available for $(PY). Install it (pip install pytest) or use 'make test_dockerized'." >&2; \
+		exit 1; \
+	fi; \
+	"$(PY)" -m pytest tests/ -v
+
+test_dockerized: ## Run the unit tests inside the devcontainer image via docker (for CI runners without CPython)
+	@set -euo pipefail; \
+	if ! command -v docker >/dev/null 2>&1; then \
+		echo "Error: docker not found." >&2; \
+		exit 1; \
+	fi; \
+	if ! docker image inspect "$(DEVCONTAINER_IMAGE)" >/dev/null 2>&1; then \
+		echo "Devcontainer image $(DEVCONTAINER_IMAGE) not found — building it from .devcontainer/Dockerfile ..."; \
+		docker build -t "$(DEVCONTAINER_IMAGE)" .devcontainer/; \
+	fi; \
+	docker run --rm -v "$$PWD":/workspace -w /workspace "$(DEVCONTAINER_IMAGE)" \
+		python -m pytest tests/ -v
 
 .DEFAULT_GOAL := help
