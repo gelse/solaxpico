@@ -5,7 +5,7 @@
 | # | Part | Notes |
 |---|------|-------|
 | 1 | Raspberry Pi Pico W | Modbus TCP ↔ RTU bridge, WiFi uplink |
-| 2 | Mini 560 DC-DC step-down, 5 V out | 18.3 × 30 × 5.5 mm; verify your variant's input range covers 13 V |
+| 2 | Mini 560 DC-DC step-down, 5 V out | 18.3 × 30 × 5.5 mm; verify your variant's input range covers the **measured** COM supply (14.8 V on this unit, manual says +13 V nominal — it varies) |
 | 3 | RS485-to-TTL adapter (auto-direction) | 16.6 × 42.8 × 3 mm; TX/RX LEDs, resettable fuses on A/B, TVS diode |
 | 4 | Custom crimped RJ45 cable, 2 pairs | see [Cable pinout](#cable-pinout) |
 
@@ -26,6 +26,12 @@ Page 69 in the manual (72 of 90):
 | orange/white     | orange           | green/white | blue | blue/white | green | brown/white       | brown             |
 
 Colors follow standard T568B. Only pins 3, 4, 5 and 6 are used by this project.
+
+> **Measured reality:** the manual labels pin 3 "+13V", but the actual output voltage
+> varies between inverters. On the inverter used for this project it measured
+> **14.8 V**. Treat the manual value as nominal only and design everything downstream
+> (Mini-560 input range, wire insulation) for the measured voltage and some headroom
+> above it.
 
 **Safety (from the manual, page 69):**
 
@@ -198,9 +204,11 @@ green carries the power. Pins 1, 2, 7, 8 are simply not wired.
   could be reversed (other module variants label pins from the host's perspective).
   First swap the GP0/GP1 leads, then re-check. This project's adapter uses
   TXD = input / RXD = output as documented above.
-- **Mini-560:** before first connection to the Pico, power it from the inverter and
-  verify 5.0 V (± 5 %) on OUT+ with a multimeter. Optionally add a small inline fuse
-  (0.5 A) in the +13 V lead — the manual does not specify a current limit for COM pin 3.
+- **Mini-560:** before first connection to the Pico, power it from the inverter,
+  measure the input rail first (expect around 14.8 V on this unit — the "+13 V" label
+  is nominal only and varies), then verify 5.0 V (± 5 %) on OUT+ with a multimeter.
+  Optionally add a small inline fuse (0.5 A) in the supply lead — the manual does not
+  specify a current limit for COM pin 3.
 - **Live pin:** COM pin 3 is live whenever the inverter is powered, even if the Pico is
   unplugged. Insulate the green/white lead whenever it is disconnected.
 - **Not an Ethernet port:** the COM jack only accepts the pinout above — never plug it
