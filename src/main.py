@@ -39,7 +39,7 @@ WIFI_CONNECT_TIMEOUT_S = 15
 WIFI_RETRY_DELAY_S = 5
 WIFI_MAX_RETRIES = 3          # consecutive Wi-Fi failures before FATAL
 BRIDGE_MAX_CRASHES = 3        # consecutive unexpected failures before FATAL
-RTU_TIMEOUTS_FATAL = 5        # consecutive Modbus timeouts before FATAL
+RTU_TIMEOUTS_FATAL = 5        # kept for log display; timeouts no longer trigger FATAL
 UART_BAUDRATE = 19200
 HEARTBEAT_INTERVAL_MS = 60000
 ENABLE_WATCHDOG = True
@@ -293,17 +293,17 @@ def run_bridge(rtu, wdt):
                         try:
                             status = service_client(conn, rtu)
                         except RTUTimeoutError:
+                            # No reply is sent to the TCP client (parity with
+                            # the mbusd setup: the client-side request timeout
+                            # handles this case). The bridge deliberately does
+                            # NOT reset here: an unreachable inverter (off,
+                            # unwired, bus fault) is not a bridge failure.
                             rtu_timeouts += 1
                             log(
-                                "modbus timeout ({}/{} consecutive)".format(
+                                "modbus timeout ({}/{})".format(
                                     rtu_timeouts, RTU_TIMEOUTS_FATAL
                                 )
                             )
-                            if rtu_timeouts >= RTU_TIMEOUTS_FATAL:
-                                fatal(
-                                    "no Modbus slave reachable after {} "
-                                    "consecutive timeouts".format(rtu_timeouts)
-                                )
                             status = CLIENT_ALIVE
                         else:
                             rtu_timeouts = 0
