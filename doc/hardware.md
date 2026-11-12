@@ -108,15 +108,17 @@ Solax COM pin 4 (485A) ──► adapter A+
 Solax COM pin 5 (485B) ──► adapter B−
 Solax COM pin 6 (GND)  ──► adapter E (RS485 ground)
 
-Pico W GP0 (UART1 TX)  ──► adapter TXD   (TXD = data input on the adapter)
-Pico W GP1 (UART1 RX)  ◄── adapter RXD   (RXD = data output on the adapter)
+Pico W GP0 (UART0 TX)  ──► adapter TXD   (TXD = data input on the adapter)
+Pico W GP1 (UART0 RX)  ◄── adapter RXD   (RXD = data output on the adapter)
 Pico W 3V3(OUT)        ──► adapter VCC
 Pico W GND             ──► adapter GND
 ```
 
 This matches the deployed firmware setting:
-`UART(1, baudrate=19200, tx=Pin(0), rx=Pin(1), bits=8, parity=None, stop=1)` —
-GP0 is the Pico's UART1 TX, GP1 its UART1 RX; 19200 8N1, Modbus RTU, slave ID 1.
+`UART(0, baudrate=19200, tx=Pin(0), rx=Pin(1), bits=8, parity=None, stop=1)` —
+GP0/GP1 are **UART0** pins on the RP2040/RP2350 (UART1 lives on GP4/GP5 etc.,
+so `UART(1, tx=Pin(0), ...)` fails with "bad TX pin"); 19200 8N1, Modbus RTU.
+This does not clash with the REPL, which runs over USB CDC, not over UART0.
 
 ### Device box internals
 
@@ -157,8 +159,8 @@ GP0 is the Pico's UART1 TX, GP1 its UART1 RX; 19200 8N1, Modbus RTU, slave ID 1.
 | 6 | Mini-560 OUT+ | Pico VSYS | short lead | 5 V supply |
 | 7 | Mini-560 OUT− | Pico GND | short lead | ground |
 | 8 | Pico 3V3(OUT) | adapter VCC | short lead | 3.3 V adapter supply |
-| 9 | Pico GP0 (UART1 TX) | adapter TXD | short lead | Pico → adapter data |
-| 10 | Pico GP1 (UART1 RX) | adapter RXD | short lead | adapter → Pico data |
+| 9 | Pico GP0 (UART0 TX) | adapter TXD | short lead | Pico → adapter data |
+| 10 | Pico GP1 (UART0 RX) | adapter RXD | short lead | adapter → Pico data |
 | 11 | Pico GND | adapter GND | short lead | TTL ground |
 
 **Junctions (nodes with more than two connections):**

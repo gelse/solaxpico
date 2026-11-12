@@ -13,6 +13,20 @@ Constraints:
 """
 
 # ---------------------------------------------------------------------------
+# Compatibility: CPython has a builtin TimeoutError, MicroPython does not.
+# On CPython the alias IS the builtin, so tests asserting TimeoutError keep
+# working; on MicroPython we fall back to a local exception class.
+# ---------------------------------------------------------------------------
+
+try:
+    RTUTimeoutError = TimeoutError
+except NameError:
+
+    class RTUTimeoutError(Exception):
+        pass
+
+
+# ---------------------------------------------------------------------------
 # CRC16 — 256-entry lookup table (Modbus polynomial 0xA001, reflected)
 # ---------------------------------------------------------------------------
 
@@ -192,8 +206,9 @@ class RTUMaster:
         1. Flush any stale data from the UART receive buffer.
         2. Write *rtu_request* to the UART.
         3. Read response bytes until:
-           - Global timeout (500 ms) reached — raises ``TimeoutError`` if
-             no bytes received; otherwise returns partial data.
+           - Global timeout (500 ms) reached — raises ``RTUTimeoutError``
+             (= builtin ``TimeoutError`` on CPython) if no bytes received;
+             otherwise returns partial data.
            - Inter-character silence (5 ms) detected after at least one byte.
 
         Args:
@@ -203,7 +218,7 @@ class RTUMaster:
             Response bytes (RTU frame with CRC).
 
         Raises:
-            TimeoutError: If no byte received within *timeout_ms*.
+            RTUTimeoutError: If no byte received within *timeout_ms*.
         """
         _time = _time_module
 
@@ -223,7 +238,7 @@ class RTUMaster:
             elapsed = _time.ticks_diff(_time.ticks_ms(), start)
             if elapsed > self.timeout_ms:
                 if len(response) == 0:
-                    raise TimeoutError(
+                    raise RTUTimeoutError(
                         "No response from Modbus slave "
                         f"(timeout={self.timeout_ms}ms)"
                     )

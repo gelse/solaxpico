@@ -23,7 +23,7 @@ DEVCONTAINER_IMAGE ?= solaxpico-devcontainer:latest
 # Example: make firmware RPI_MOUNT=/run/media/$$USER/RPI-RP2
 RPI_MOUNT     ?=
 
-.PHONY: help firmware deploy clean-firmware test test_dockerized
+.PHONY: help firmware deploy deploy_docker clean-firmware test test_dockerized
 
 help: ## Show this help message (default)
 	@echo "Usage: make <target>"
@@ -82,7 +82,7 @@ deploy: ## Deploy solution code, configuration, and service stub to the Pico (Mi
 	mpremote connect "$(PICO_SERIAL)" fs cp wifi_config.py :wifi_config.py; \
 	echo "Resetting Pico to start the deployed service ..."; \
 	mpremote connect "$(PICO_SERIAL)" reset; \
-	echo "Done. Service stub deployed (connects to Wi-Fi and idles)."
+	echo "Done. Bridge deployed (Wi-Fi + Modbus TCP on port 502)."
 
 $(FIRMWARE_FILE):
 	@mkdir -p "$(FIRMWARE_DIR)"
@@ -95,6 +95,38 @@ $(FIRMWARE_FILE):
 		python3 -c "import urllib.request; urllib.request.urlretrieve('$(FIRMWARE_URL)', '$(FIRMWARE_FILE)')"; \
 	fi
 	@echo "Firmware saved to $(FIRMWARE_FILE)"
+
+deploy_docker: ## Deploy to the Pico using mpremote inside the devcontainer image (for hosts without mpremote)
+	@set -euo pipefail; \
+	if ! command -v docker >/dev/null 2>&1; then \
+		echo "Error: docker not found." >&2; \
+		exit 1; \
+	fi; \
+	if ! docker image inspect "$(DEVCONTAINER_IMAGE)" >/dev/null 2>&1; then \
+		echo "Devcontainer image $(DEVCONTAINER_IMAGE) not found — building it from .devcontainer/Dockerfile ..."; \
+		docker build -t "$(DEVCONTAINER_IMAGE)" .devcontainer/; \
+	fi; \
+	if [ ! -e "$(PICO_SERIAL)" ]; then \
+		echo "Error: serial device $(PICO_SERIAL) not found." >&2; \
+		echo "Ensure the Pico is connected with MicroPython running." >&2; \
+		exit 1; \
+	fi; \
+	if [ ! -f wifi_config.py ]; then \
+		echo "Error: wifi_config.py not found." >&2; \
+		echo "Copy wifi_config.example.py to wifi_config.py and set your credentials." >&2; \
+		exit 1; \
+	fi; \
+	DEV_GID=$$(stat -c %g "$(PICO_SERIAL)"); \
+	echo "Deploying to $(PICO_SERIAL) via devcontainer image ..."; \
+	docker run --rm -v "$$PWD":/workspace -w /workspace \
+		--device "$(PICO_SERIAL)" --group-add "$$DEV_GID" \
+		"$(DEVCONTAINER_IMAGE)" sh -c '\
+			mpremote connect '"$(PICO_SERIAL)"' fs cp src/boot.py :boot.py && \
+			mpremote connect '"$(PICO_SERIAL)"' fs cp src/main.py :main.py && \
+			mpremote connect '"$(PICO_SERIAL)"' fs cp src/modbus_bridge.py :modbus_bridge.py && \
+			mpremote connect '"$(PICO_SERIAL)"' fs cp wifi_config.py :wifi_config.py && \
+			mpremote connect '"$(PICO_SERIAL)"' reset'; \
+	echo "Done. Bridge deployed (Wi-Fi + Modbus TCP on port 502)."
 
 clean-firmware: ## Remove downloaded MicroPython firmware files
 	rm -rf "$(FIRMWARE_DIR)"
