@@ -75,12 +75,20 @@ def _catch_quad(p, z_base):
 
 
 def _split_half(frame, p, side, end_hole=False):
-    sign = -1.0 if side == "-x" else 1.0
-    keep = Part.makeBox(
-        p["OUTER_W"], p["OUTER_D"] + 2, p["OUTER_HEIGHT"] + 2,
-        App.Vector(sign * p["OUTER_W"] / 2 - p["OUTER_W"] / 2,
-                   -(p["OUTER_D"] + 2) / 2, -1),
-    )
+    # Split moved toward the +X (holed) end: only 5 mm wall in -X direction
+    # for the short (+X, with hole) part, leaving a long (-X, no hole) part.
+    split_x = p["OUTER_W"] / 2 - 5.0
+
+    if side == "-x":
+        keep = Part.makeBox(
+            split_x + p["OUTER_W"], p["OUTER_D"] + 2, p["OUTER_HEIGHT"] + 2,
+            App.Vector(-p["OUTER_W"], -(p["OUTER_D"] + 2) / 2, -1),
+        )
+    else:
+        keep = Part.makeBox(
+            p["OUTER_W"] - split_x, p["OUTER_D"] + 2, p["OUTER_HEIGHT"] + 2,
+            App.Vector(split_x, -(p["OUTER_D"] + 2) / 2, -1),
+        )
     half = frame.common(keep)
 
     inner_face_y = p["FRAME_INNER_D"] / 2
@@ -132,15 +140,15 @@ def _split_half(frame, p, side, end_hole=False):
     if side == "-x":
         finger_band = bands["lower"]
         notch_band = bands["upper"]
-        finger_x = p["FRAME_LIP_DEPTH"] / 2
+        finger_x = split_x + p["FRAME_LIP_DEPTH"] / 2
         finger_out = "+x"
-        notch_x = -notch_depth / 2
+        notch_x = split_x - notch_depth / 2
     else:
         finger_band = bands["upper"]
         notch_band = bands["lower"]
-        finger_x = -p["FRAME_LIP_DEPTH"] / 2
+        finger_x = split_x - p["FRAME_LIP_DEPTH"] / 2
         finger_out = "-x"
-        notch_x = notch_depth / 2
+        notch_x = split_x + notch_depth / 2
 
     half = half.cut(notch_pair(notch_x, notch_depth, *notch_band))
     half = half.fuse(finger_pair(finger_x, p["FRAME_LIP_DEPTH"], *finger_band, finger_out))
