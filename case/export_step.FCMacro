@@ -1,0 +1,59 @@
+"""Export every solaxpico case part as a STEP file.
+
+Run this macro inside FreeCAD with solaxpico.FCStd open (Macro -> Macros...,
+or place/symlink in your FreeCAD macro directory). It exports each case part
+to STEP files in a `step/` folder next to the document.
+"""
+
+import os
+
+import FreeCAD as App
+import Part
+
+
+PART_OBJECTS = [
+    "baseplate_param",
+    "frame_xneg_param",
+    "frame_xpos_param",
+    "tray_param",
+    "max485_param",
+    "lid_param",
+]
+
+
+def export_parts(doc=None, out_dir=None):
+    if doc is None:
+        doc = App.ActiveDocument
+    if doc is None:
+        raise RuntimeError("No active document. Open solaxpico.FCStd first.")
+
+    if out_dir is None:
+        if not doc.FileName:
+            raise RuntimeError("Document has no file name; save it or pass out_dir.")
+        out_dir = os.path.join(os.path.dirname(doc.FileName), "step")
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    exported = []
+    for name in PART_OBJECTS:
+        obj = doc.getObject(name)
+        if obj is None or not hasattr(obj, "Shape") or obj.Shape.isNull():
+            print(f"Skipping {name}: missing or empty shape")
+            continue
+        label = getattr(obj, "Label", name) or name
+        safe = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in label)
+        path = os.path.join(out_dir, f"{safe}.step")
+        # export the shape; use Part.export for STEP
+        Part.export([obj], path)
+        exported.append(path)
+        print(f"Exported {label} -> {path}")
+
+    if not exported:
+        print("No parts exported.")
+    else:
+        print(f"Done: {len(exported)} STEP file(s) in {out_dir}")
+    return exported
+
+
+# Run when executed as a macro
+export_parts()
