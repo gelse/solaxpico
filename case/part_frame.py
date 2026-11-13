@@ -120,15 +120,13 @@ def _split_half(frame, p, side, end_hole=False):
 
     def finger_pair(x_center, depth, z0, z1, outward):
         a = finger_solid(x_center, depth, z0, z1, outward)
-        b = a.copy()
-        b.mirror(App.Vector(0, 0, 0), App.Vector(0, 1, 0))
+        b = a.mirror(App.Vector(0, 0, 0), App.Vector(0, 1, 0))
         return a.fuse(b)
 
     def notch_pair(x_center, depth, z0, z1):
         n = Part.makeBox(depth, notch_y1 - notch_y0, z1 - z0,
                          App.Vector(x_center - depth / 2, notch_y0, z0))
-        m = n.copy()
-        m.mirror(App.Vector(0, 0, 0), App.Vector(0, 1, 0))
+        m = n.mirror(App.Vector(0, 0, 0), App.Vector(0, 1, 0))
         return n.fuse(m)
 
     if side == "-x":
