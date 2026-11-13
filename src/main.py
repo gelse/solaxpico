@@ -26,6 +26,7 @@ except ImportError:
     wifi_config = None
 
 LED = Pin("LED", Pin.OUT)
+_webrepl_started = False
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -87,6 +88,33 @@ def init_watchdog():
 def feed(wdt):
     if wdt is not None:
         wdt.feed()
+
+
+# ---------------------------------------------------------------------------
+# WebREPL (optional remote debugging, started once Wi-Fi is up)
+# ---------------------------------------------------------------------------
+def start_webrepl():
+    global _webrepl_started
+    if _webrepl_started:
+        return
+    if wifi_config is None:
+        return
+    passwd = getattr(wifi_config, "WEBREPL_PASS", "")
+    if not passwd or passwd == "change_me":
+        return
+    try:
+        import webrepl
+
+        try:
+            webrepl.start(password=passwd)
+        except TypeError:
+            # Older MicroPython ports read the password from webrepl_cfg.py;
+            # fall back to start() so a manually configured device still works.
+            webrepl.start()
+        _webrepl_started = True
+        log("WebREPL started on port 8266 (ws://<ip>:8266/)")
+    except Exception as exc:
+        log("WebREPL not started: {}".format(exc))
 
 
 # ---------------------------------------------------------------------------
@@ -340,6 +368,7 @@ def main():
             continue
         wifi_failures = 0
         bridge_crashes = 0  # fresh bridge run after (re)connect
+        start_webrepl()
 
         try:
             rtu = init_rtu()

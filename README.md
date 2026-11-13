@@ -137,6 +137,7 @@ The bridge IP is shown in the serial log (`connected: 10.x.x.x`).
 | What | Where | Default |
 |---|---|---|
 | Wi-Fi credentials | `wifi_config.py` (`WIFI_SSID`, `WIFI_PASS`) | — (gitignored) |
+| Remote debugging (WebREPL) | `wifi_config.py` (`WEBREPL_PASS`) | off (unset/empty) |
 | Serial device | Makefile variable `PICO_SERIAL` | `/dev/ttyACM0` |
 | BOOTSEL mount point | `RPI_MOUNT` (only if auto-detection fails) | auto |
 | UART parameters | `src/main.py` constants | 19200 8N1, UART0 |
@@ -166,6 +167,22 @@ it out over USB.
 
   With the inverter wired, all 5 tests pass; without it, register reads
   report clean `[FAIL]`s (timeouts) while TCP and the ghost-slave test pass.
+
+## Remote debugging (WebREPL)
+
+For live inspection without USB access, enable MicroPython's **WebREPL**:
+
+1. In `wifi_config.py`, set `WEBREPL_PASS = "..."` (non-empty, not the
+   placeholder). Leave it unset to keep WebREPL off.
+2. Deploy (`make deploy` / `make deploy_docker`) and reboot the Pico.
+3. Connect to `ws://<pico-ip>:8266/` with a WebREPL client (for example the
+   browser client at https://micropython.org/webrepl/).
+
+The REPL runs alongside the bridge and lets you inspect state or run snippets
+(e.g. `import gc; gc.mem_free()`, or probe the UART/RTU objects if you adapt
+the code to expose them). It does **not** stream the existing USB-serial log
+history — `print()` output still goes to the USB serial console. The WebREPL
+password is stored in `wifi_config.py` on the device like the Wi-Fi credentials.
 
 ## Troubleshooting
 
